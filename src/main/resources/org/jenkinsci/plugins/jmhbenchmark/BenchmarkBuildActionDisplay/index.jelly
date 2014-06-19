@@ -1,0 +1,48 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
+	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <l:layout title="trendlayout" css="/plugin/jmhbenchmark/css/style.css">    
+    <st:include it="${it.build}" page="sidepanel.jelly"/>
+    <l:main-panel>
+      <j:set var="report" value="${it.getJmhPerfReport()}"/>
+      <j:set var="benchmarkHeaderNoParams" value="${report.getHeaderWithoutParams()}"/>
+      <j:set var="benchmarkHeaderParams" value="${report.getHeaderParamsSorted()}"/>
+      <j:set var="benchmarkResult" value="${report.getApiTestReport()}"/>        
+	  <table class="sortable source">
+	    <tr>
+	      <j:forEach var="column" items="${benchmarkHeaderNoParams}">
+	        <th>${column}</th>
+	      </j:forEach>
+	      <j:forEach var="columnParams" items="${benchmarkHeaderParams}">
+	        <th>${columnParams}</th>
+	      </j:forEach>	        
+	    </tr>
+	    <j:forEach var="entry" items="${benchmarkResult}">
+	     <tr>
+		  <td>${entry.value.shortBenchmarkName}</td>
+   		  <td>${entry.value.mode}</td>
+		  <td>${entry.value.threads}</td>
+		  <td>${entry.value.samples}</td>
+		  <td>${it.getFormattedNumber(entry.value.mean)}</td>
+		  <td>${it.getFormattedNumber(entry.value.meanError)}</td>
+          <td>${entry.value.unit}</td>
+          <j:choose>
+           <j:when test="${entry.value.changeIndicator == 'green'}">
+            <td><b><font color="green">${entry.value.meanChangeFromPrev} &#8593;</font></b></td>
+           </j:when>
+           <j:when test="${entry.value.changeIndicator == 'red'}">
+            <td><b><font color="red">${entry.value.meanChangeFromPrev} &#8595;</font></b></td>
+           </j:when>
+           <j:otherwise>
+            <td>${entry.value.meanChangeFromPrev}</td>
+           </j:otherwise>                     
+          </j:choose>
+	      <j:forEach var="columnParams" items="${benchmarkHeaderParams}">
+	        <td>${entry.value.params[columnParams]}</td>
+	      </j:forEach>	                  
+       </tr>
+      </j:forEach>
+    </table>  
+    </l:main-panel>
+  </l:layout>
+</j:jelly>
+
