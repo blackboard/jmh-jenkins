@@ -131,8 +131,6 @@ public class BenchmarkPublisher extends Recorder
     return new BenchmarkProjectAction( project );
   }
 
-  // Overridden for better type safety. If your plugin doesn't really define any property on Descriptor,
-  // you don't have to do this.
   @Override
   public DescriptorImpl getDescriptor()
   {
