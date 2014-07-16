@@ -13,7 +13,16 @@
     <f:textbox />
   </f:entry>
 
+  <f:entry title="Relative Performance Degradation Threshold Indicator (in %)" field="performanceDegradationThreshold">
+    <f:textbox default="-20" />
+  </f:entry>
+
+  <f:entry title="Relative Performance Increase Threshold Indicator (in %)" field="performanceIncreaseThreshold">
+    <f:textbox default="20" />
+  </f:entry>
+
   <f:entry title="Decimal Places in Benchmark Report" field="decimalPlaces">
-    <f:textbox />
-  </f:entry>              
+    <f:textbox default="4" />
+  </f:entry>
+                
 </j:jelly>

@@ -29,7 +29,7 @@ public class BenchmarkProjectAction implements Action
 {
   private static final String PLUGIN_NAME = "jmhbenchmark";
   private static final String DISPLAY_NAME = "JMH Report Trend";
-  private static int BENCHMARK_REPORT_BUILD_COUNT = 10;
+  private static int BENCHMARK_TREND_REPORT_MAX_BUILD_COUNT = 10;
 
   public final AbstractProject<?, ?> _project;
 
@@ -38,6 +38,7 @@ public class BenchmarkProjectAction implements Action
   public BenchmarkProjectAction( @SuppressWarnings( "rawtypes" ) AbstractProject project )
   {
     _project = project;
+    //BENCHMARK_TREND_REPORT_MAX_BUILD_COUNT = maxNumberOfBuildsToTrend;
   }
 
   public String getIconFileName()
@@ -65,7 +66,7 @@ public class BenchmarkProjectAction implements Action
     Map<String, BenchmarkResult> buildBenchmarkData = null;
     BenchmarkTrend trendBenchmarkData = null;
     List<? extends AbstractBuild<?, ?>> builds = getProject().getBuilds();
-    int buildCount = BENCHMARK_REPORT_BUILD_COUNT;
+    int buildCount = BENCHMARK_TREND_REPORT_MAX_BUILD_COUNT;
     _benchmarkTrend.clear();
 
     for ( AbstractBuild<?, ?> currentBuild : builds )
@@ -110,7 +111,6 @@ public class BenchmarkProjectAction implements Action
       buildCount--;
       if ( buildCount < 0 )
         break;
-
     }
 
     return _benchmarkTrend;

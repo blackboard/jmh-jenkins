@@ -5,6 +5,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
@@ -23,16 +24,20 @@ import org.kohsuke.stapler.QueryParameter;
 public class BenchmarkPublisher extends Recorder
 {
   private String _outputFilePath;
+  private int _performanceIncreaseThreshold;
+  private int _performanceDegradationThreshold;
   private int _decimalPlaces;
-  ReportParser _parser;
+  private ReportParser _parser;
   private static String BENCHMARK_OUTPUT_FOLDER = "jmh_benchmark_result";
   private static String BUILD_PROJECT_NAME;
-
+  
   @DataBoundConstructor
-  public BenchmarkPublisher( String outputFilePath, int decimalPlaces )
+  public BenchmarkPublisher( String outputFilePath, int decimalPlaces, int performanceIncreaseThreshold, int performanceDegradationThreshold )
   {
     _outputFilePath = outputFilePath;
     _decimalPlaces = decimalPlaces;
+    _performanceIncreaseThreshold = performanceIncreaseThreshold;
+    _performanceDegradationThreshold = performanceDegradationThreshold;
   }
 
   public String getOutputFilePath()
@@ -59,8 +64,10 @@ public class BenchmarkPublisher extends Recorder
     BenchmarkReport parsedReport = _parser.parse( build, masterCopy, listener );
 
     // get previous build report to calculate the increase in mean value for each benchmark
-    // and set the change indicator (i.e. an up or down arrow)
+    // and set an indicator (i.e. up (green) or down (red) for each benchmark, depending on threshold set
+    // in the configuration. If there is at least a down (red) for one benchmark, the build status will be unstable
     AbstractBuild<?, ?> previousBuild = build.getPreviousBuild();
+    boolean buildStable = true;
     if ( previousBuild != null )
     {
       BenchmarkBuildAction previousBuildAction = previousBuild.getAction( BenchmarkBuildAction.class );
@@ -75,19 +82,23 @@ public class BenchmarkPublisher extends Recorder
           String key = entry.getKey();
           BenchmarkResult currVal = entry.getValue();
           BenchmarkResult prevVal = prevApiTestReport.get( key );
-          // decrease in mean from previous is calculated as ((prev - curr)/prev) * 100%
-          double decreaseInMeanFromPrev = ( 1 - currVal.getMean() / prevVal.getMean() ) * 100.0;
-          // two decimal places
-          int multiplier = (int) Math.pow( 10, 2 );
-          decreaseInMeanFromPrev = (double) Math.round( decreaseInMeanFromPrev * multiplier ) / multiplier;
-          currVal.setMeanChangeFromPrev( decreaseInMeanFromPrev );
-          if ( decreaseInMeanFromPrev >= 20 )
+          if(prevVal != null)
           {
-            currVal.setChangeIndicator( "green" );
-          }
-          else if ( decreaseInMeanFromPrev <= -20 )
-          {
-            currVal.setChangeIndicator( "red" );
+            // decrease in mean from previous is calculated as ((prev - curr)/prev) * 100%
+            double decreaseInMeanFromPrev = ( 1 - currVal.getMean() / prevVal.getMean() ) * 100.0;
+            // two decimal places
+            int multiplier = (int) Math.pow( 10, 2 );
+            decreaseInMeanFromPrev = (double) Math.round( decreaseInMeanFromPrev * multiplier ) / multiplier;
+            currVal.setMeanChangeFromPrev( decreaseInMeanFromPrev );
+            if ( decreaseInMeanFromPrev >= _performanceIncreaseThreshold )
+            {
+              currVal.setChangeIndicator( "green" );
+            }
+            else if ( decreaseInMeanFromPrev <= _performanceDegradationThreshold )
+            {
+              currVal.setChangeIndicator( "red" );
+              buildStable = false;
+            }            
           }
         }
       }
@@ -95,6 +106,12 @@ public class BenchmarkPublisher extends Recorder
 
     BenchmarkBuildAction buildAction = new BenchmarkBuildAction( build, parsedReport, _decimalPlaces );
     build.addAction( buildAction );
+    
+    if(!buildStable)
+    {
+      build.setResult( Result.UNSTABLE );
+    }
+    
     return true;
   }
 
@@ -138,14 +155,12 @@ public class BenchmarkPublisher extends Recorder
   }
 
   /**
-   * Descriptor for {@link BenchmarkPublisher}. Used as a singleton. The class is marked as public so that it can be
-   * accessed from views.
+   * The class is marked as public so that it can be accessed from views.
    * <p>
    * See <tt>src/main/resources/org/jenkinsci/plugins/jmhbenchmark/BenchmarkPublisher/*.jelly</tt> for the actual HTML
    * fragment for the configuration screen.
    */
   @Extension
-  // This indicates to Jenkins that this is an implementation of an extension point.
   public static final class DescriptorImpl extends BuildStepDescriptor<Publisher>
   {
     public boolean isApplicable( @SuppressWarnings( "rawtypes" ) Class<? extends AbstractProject> jobType )
@@ -175,6 +190,31 @@ public class BenchmarkPublisher extends Recorder
       return FormValidation.ok();
     }
 
+    public FormValidation doCheckPerformanceDegradationThreshold( @QueryParameter String performanceDegradationThreshold )
+    {
+      try
+      {
+        Integer.parseInt( performanceDegradationThreshold );
+      }
+      catch ( NumberFormatException ex )
+      {
+        return FormValidation.error( "Not a valid number" );
+      }
+      return FormValidation.ok();
+    }
+
+    public FormValidation doCheckPerformanceIncreaseThreshold( @QueryParameter String performanceIncreaseThreshold )
+    {
+      try
+      {
+        Integer.parseInt( performanceIncreaseThreshold );
+      }
+      catch ( NumberFormatException ex )
+      {
+        return FormValidation.error( "Not a valid number" );
+      }
+      return FormValidation.ok();
+    }
   }
 
   public BuildStepMonitor getRequiredMonitorService()

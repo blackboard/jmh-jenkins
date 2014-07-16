@@ -13,7 +13,6 @@ import java.util.List;
 
 public class CsvParser extends ReportParser
 {
-  private static String BENCHMARK_STARTING_NAME = "benchmark.java.";
   private static String DECREASE_IN_MEAN_HEADER_NAME = "Decrease in Mean in %";
 
   public CsvParser()
@@ -78,7 +77,7 @@ public class CsvParser extends ReportParser
     String[] values = line.split( "," );
     String benchmarkName = stripQuotes( values[ 0 ] );
     sample.setBenchmarkName( benchmarkName );
-    sample.setShortBenchmarkName( benchmarkName.replace( BENCHMARK_STARTING_NAME, "" ) );
+    sample.setShortBenchmarkName( getShortName(benchmarkName) );
     sample.setMode( stripQuotes( values[ 1 ] ) );
     sample.setThreads( Integer.valueOf( values[ 2 ] ) );
     sample.setSamples( Integer.valueOf( values[ 3 ] ) );
@@ -102,6 +101,22 @@ public class CsvParser extends ReportParser
     return quotedStr.replace( "\"", "" );
   }
 
+  private String getShortName( String name )
+  {
+    String[] splitNames = name.split( "\\." );
+    StringBuilder sb = new StringBuilder( 100 );
+    for ( int i = 0; i < splitNames.length - 2; i++ )
+    {
+      sb.append( splitNames[i].charAt( 0 ) );
+      sb.append( "." );
+    }
+    sb.append( splitNames[splitNames.length - 2] );
+    sb.append( "." );
+    sb.append( splitNames[splitNames.length - 1] );
+
+    return sb.toString();
+  }
+  
   private List<String> getHeadersList( String line )
   {
     List<String> headers = new ArrayList<String>();

@@ -1,4 +1,10 @@
-table.source {
+body
+{
+    counter-reset: Serial; /* Set the Table Serial counter to 0 */
+}
+
+table.source 
+{
     border: solid black 1px;
     border-style: solid;
     border-color: #bbb;
@@ -7,23 +13,37 @@ table.source {
     width: 100%;
 }
 
-table.source td {
+table.source td 
+{
     border: solid black 1px;
     text-align: right;
     padding: 5px;
     white-space: nowrap;
 }
-table.source td.left {
+
+table.source tr td:first-child:before
+{
+  counter-increment: Serial;  /* Increment the Serial counter */
+  content: counter(Serial);   /* Display the counter */
+}
+
+table.source td.left 
+{
     text-align: left;
 }
-table.source td.center {
+
+table.source td.center 
+{
     text-align: center;
 }
-table.source td.right {
+
+table.source td.right 
+{
     text-align: right;
 }
 
-table.source th {
+table.source th 
+{
     border: solid black 1px;
     padding-left: 0.5em;
     font-weight: bold;
@@ -31,7 +51,8 @@ table.source th {
     white-space: nowrap;
 }
 
-.trend {
+.trend 
+{
 	margin-right: 40px;
 	border: solid 1px pink;
     margin-bottom: 20px;

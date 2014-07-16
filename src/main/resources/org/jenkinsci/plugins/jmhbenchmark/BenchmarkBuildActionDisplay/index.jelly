@@ -9,6 +9,7 @@
       <j:set var="benchmarkResult" value="${report.getApiTestReport()}"/>        
 	  <table class="sortable source">
 	    <tr>
+	      <th>No.</th>
 	      <j:forEach var="column" items="${benchmarkHeaderNoParams}">
 	        <th>${column}</th>
 	      </j:forEach>
@@ -18,6 +19,7 @@
 	    </tr>
 	    <j:forEach var="entry" items="${benchmarkResult}">
 	     <tr>
+	      <td></td>
 		  <td>${entry.value.shortBenchmarkName}</td>
    		  <td>${entry.value.mode}</td>
 		  <td>${entry.value.threads}</td>
