@@ -11,9 +11,9 @@ import org.kohsuke.stapler.StaplerProxy;
 public class BenchmarkBuildAction implements Action, StaplerProxy
 {
   private final AbstractBuild<?, ?> _build;
-  private BenchmarkReport _performanceReport;
+  private final BenchmarkReport _performanceReport;
+  private int _decimalPlaces;
   private transient WeakReference<BenchmarkBuildActionDisplay> _buildActionDisplay;
-  private static transient int _decimalPlaces;
 
   public BenchmarkBuildAction( AbstractBuild<?, ?> pBuild, BenchmarkReport performanceReport, int decimalPlaces )
   {
@@ -42,11 +42,6 @@ public class BenchmarkBuildAction implements Action, StaplerProxy
   public AbstractBuild<?, ?> getBuild()
   {
     return _build;
-  }
-
-  public void setPerformanceReport( BenchmarkReport performanceReport )
-  {
-    _performanceReport = performanceReport;
   }
 
   public BenchmarkReport getPerformanceReport()

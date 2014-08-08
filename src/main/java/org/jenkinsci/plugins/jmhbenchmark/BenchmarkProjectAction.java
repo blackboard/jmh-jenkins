@@ -9,6 +9,8 @@ import java.util.TreeMap;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.CategoryAxis;
+import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
@@ -24,12 +26,12 @@ import hudson.util.ColorPalette;
 import hudson.util.Graph;
 import hudson.util.ChartUtil.NumberOnlyBuildLabel;
 import hudson.util.DataSetBuilder;
+import hudson.util.ShiftedCategoryAxis;
 
 public class BenchmarkProjectAction implements Action
 {
   private static final String PLUGIN_NAME = "jmhbenchmark";
   private static final String DISPLAY_NAME = "JMH Report Trend";
-  private static int BENCHMARK_TREND_REPORT_MAX_BUILD_COUNT = 10;
 
   public final AbstractProject<?, ?> _project;
 
@@ -38,7 +40,6 @@ public class BenchmarkProjectAction implements Action
   public BenchmarkProjectAction( @SuppressWarnings( "rawtypes" ) AbstractProject project )
   {
     _project = project;
-    //BENCHMARK_TREND_REPORT_MAX_BUILD_COUNT = maxNumberOfBuildsToTrend;
   }
 
   public String getIconFileName()
@@ -66,7 +67,7 @@ public class BenchmarkProjectAction implements Action
     Map<String, BenchmarkResult> buildBenchmarkData = null;
     BenchmarkTrend trendBenchmarkData = null;
     List<? extends AbstractBuild<?, ?>> builds = getProject().getBuilds();
-    int buildCount = BENCHMARK_TREND_REPORT_MAX_BUILD_COUNT;
+
     _benchmarkTrend.clear();
 
     for ( AbstractBuild<?, ?> currentBuild : builds )
@@ -107,10 +108,6 @@ public class BenchmarkProjectAction implements Action
           _benchmarkTrend.put( key, trendBenchmarkData );
         }
       }
-
-      buildCount--;
-      if ( buildCount < 0 )
-        break;
     }
 
     return _benchmarkTrend;
@@ -157,12 +154,12 @@ public class BenchmarkProjectAction implements Action
 
           for ( ChartUtil.NumberOnlyBuildLabel label : meanTrend.keySet() )
           {
-            dataSetBuilder.add( meanTrend.get( label ), "mean", label );
+            dataSetBuilder.add( meanTrend.get( label ), "Score", label );
           }
 
           for ( ChartUtil.NumberOnlyBuildLabel label : meanErrorTrend.keySet() )
           {
-            dataSetBuilder.add( meanErrorTrend.get( label ), "Mean Error (99.9%)", label );
+            dataSetBuilder.add( meanErrorTrend.get( label ), "Score Error (99.9%)", label );
           }
 
           return dataSetBuilder;
@@ -203,6 +200,14 @@ public class BenchmarkProjectAction implements Action
       chart.setBackgroundPaint( Color.white );
 
       final CategoryPlot plot = chart.getCategoryPlot();
+      
+      CategoryAxis domainAxis = new ShiftedCategoryAxis( null );
+      plot.setDomainAxis( domainAxis );
+      domainAxis.setCategoryLabelPositions( CategoryLabelPositions.UP_90 );
+      domainAxis.setLowerMargin( 0.0 );
+      domainAxis.setUpperMargin( 0.0 );
+      domainAxis.setCategoryMargin( 0.0 );
+      
       final LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
       renderer.setBaseStroke( new BasicStroke( 3.0f ) );
       ColorPalette.apply( renderer );

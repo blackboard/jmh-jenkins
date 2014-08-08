@@ -1,28 +1,27 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <!--
     This jelly script is used for per-project configuration.
-
-    See global.jelly for a general discussion about jelly script.
   -->
 
   <!--
-    Creates a text field that shows the value of the "name" property.
+    Creates a text field that shows the value of the property.
     When submitted, it will be passed to the corresponding constructor parameter.
   -->
-  <f:entry title="Path to Benchmark Output File" field="outputFilePath">
-    <f:textbox />
+
+  <f:entry title="Baseline Build Number">
+    <f:textbox field="baselineBuildNumber" default="0" />
   </f:entry>
 
-  <f:entry title="Relative Performance Degradation Threshold Indicator (in %)" field="performanceDegradationThreshold">
-    <f:textbox default="-20" />
+  <f:entry title="Performance Degradation Threshold (in %)" description="This threshold applies between the current and previous successful build as well the current and baseline build if the latter is specified. The default threshold is -20%">
+    <f:textbox field="performanceDegradationThreshold" default="-20" />
   </f:entry>
 
-  <f:entry title="Relative Performance Increase Threshold Indicator (in %)" field="performanceIncreaseThreshold">
-    <f:textbox default="20" />
+  <f:entry title="Performance Gain Threshold (in %)" description="This threshold is an indicator for a performance improvement in the current build compared to the previous successful build and the baseline build if baseline is defined. The default threshold is +20%">
+    <f:textbox field="performanceIncreaseThreshold" default="20" />
   </f:entry>
 
-  <f:entry title="Decimal Places in Benchmark Report" field="decimalPlaces">
-    <f:textbox default="4" />
+  <f:entry title="Decimal Places in Benchmark Report">
+    <f:textbox field="decimalPlaces" default="4" />
   </f:entry>
                 
 </j:jelly>

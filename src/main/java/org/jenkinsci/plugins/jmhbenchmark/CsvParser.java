@@ -13,7 +13,7 @@ import java.util.List;
 
 public class CsvParser extends ReportParser
 {
-  private static String DECREASE_IN_MEAN_HEADER_NAME = "Decrease in Mean in %";
+  private static String IMPROVEMENT_IN_MEAN_HEADER_NAME = "Score Improvement % (previous/baseline)";
 
   public CsvParser()
   {
@@ -40,7 +40,7 @@ public class CsvParser extends ReportParser
         // This is the first line. The CSV file has header at the first line.
         headerColumns = getHeadersList( line );
         report.setHeader( headerColumns );
-        report.addHeaderColumn( DECREASE_IN_MEAN_HEADER_NAME );
+        report.addHeaderColumn( IMPROVEMENT_IN_MEAN_HEADER_NAME );
         line = reader.readLine();
       }
       while ( line != null )
@@ -63,9 +63,9 @@ public class CsvParser extends ReportParser
                      
   /**
    * If the benchmark has no parameters, the output is in the order: 
-   *    "Benchmark","Mode","Threads","Samples","Mean","Mean Error (99.9%)","Unit"
+   *    "Benchmark","Mode","Threads","Samples","Score","Score Error (99.9%)","Unit"
    * If the benchmark has parameters, the output is in the following form:
-   *    "Benchmark","Mode","Threads","Samples","Mean","Mean Error (99.9%)","Unit", "Param: paramName1","Param: paramName2"
+   *    "Benchmark","Mode","Threads","Samples","Score","Score Error (99.9%)","Unit", "Param: paramName1","Param: paramName2"
    * @param line
    * @param header
    * @return

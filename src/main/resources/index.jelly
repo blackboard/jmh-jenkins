@@ -2,5 +2,5 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-  This plugin is a sample to explain how to write a Jenkins plugin.
+  This plugin publishes JMH benchmark result to each build and provides a visualization for trending benchmark result across build. It also compares performance degradation/gain of a benchmark between successive builds and mark a build unstable if the degradation is below the specified threshold.
 </div>

@@ -16,6 +16,10 @@ import hudson.util.FormValidation;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -23,31 +27,44 @@ import org.kohsuke.stapler.QueryParameter;
 
 public class BenchmarkPublisher extends Recorder
 {
-  private String _outputFilePath;
   private int _performanceIncreaseThreshold;
   private int _performanceDegradationThreshold;
   private int _decimalPlaces;
+  private int _baselineBuildNumber;
   private ReportParser _parser;
   private static String BENCHMARK_OUTPUT_FOLDER = "jmh_benchmark_result";
+  private static String BENCHMARK_MODE_THRPT = "thrpt";
   private static String BUILD_PROJECT_NAME;
+  // two decimal places are used to set changes from previous or baseline build
+  private static int MULTIPLIER = 100;
   
   @DataBoundConstructor
-  public BenchmarkPublisher( String outputFilePath, int decimalPlaces, int performanceIncreaseThreshold, int performanceDegradationThreshold )
+  public BenchmarkPublisher(int performanceIncreaseThreshold, int performanceDegradationThreshold, int decimalPlaces, int baselineBuildNumber )
   {
-    _outputFilePath = outputFilePath;
-    _decimalPlaces = decimalPlaces;
     _performanceIncreaseThreshold = performanceIncreaseThreshold;
     _performanceDegradationThreshold = performanceDegradationThreshold;
-  }
-
-  public String getOutputFilePath()
-  {
-    return _outputFilePath;
+    _decimalPlaces = decimalPlaces;
+    _baselineBuildNumber = baselineBuildNumber;
   }
 
   public int getDecimalPlaces()
   {
     return _decimalPlaces;
+  }
+  
+  public int getPerformanceIncreaseThreshold()
+  {
+    return _performanceIncreaseThreshold;
+  }
+  
+  public int getPerformanceDegradationThreshold()
+  {
+    return _performanceDegradationThreshold;
+  }
+  
+  public int getBaselineBuildNumber()
+  {
+    return _baselineBuildNumber;
   }
 
   @Override
@@ -55,50 +72,113 @@ public class BenchmarkPublisher extends Recorder
     throws IOException, InterruptedException
   {
     BUILD_PROJECT_NAME = build.getProject().getName();
-
-    File outFile = new File( _outputFilePath );
-
-    File masterCopy = copyBenchmarkOutputToMaster( build, outFile, BUILD_PROJECT_NAME );
+    boolean buildStable = true;
+    
+    PrintStream logger = listener.getLogger();
+    if ( build.getResult().isWorseThan( Result.UNSTABLE ) )
+    {
+      build.setResult( Result.FAILURE );
+      return true;
+    }
+        
+    FilePath[] files =  build.getWorkspace().list( "*.csv" );
+    if( files.length <= 0)
+    {
+      build.setResult( Result.FAILURE );
+      logger.println( "JMH Benchmark: benchmark file could not be found.");
+      return true;      
+    }
+       
+    File localReports = copyBenchmarkOutputToMaster( build, files[0], BUILD_PROJECT_NAME );
+        
     // currently only a CSV parser is supported
     _parser = new CsvParser();
-    BenchmarkReport parsedReport = _parser.parse( build, masterCopy, listener );
+    BenchmarkReport parsedReport = _parser.parse( build, localReports, listener );
 
-    // get previous build report to calculate the increase in mean value for each benchmark
-    // and set an indicator (i.e. up (green) or down (red) for each benchmark, depending on threshold set
-    // in the configuration. If there is at least a down (red) for one benchmark, the build status will be unstable
-    AbstractBuild<?, ?> previousBuild = build.getPreviousBuild();
-    boolean buildStable = true;
-    if ( previousBuild != null )
+    // get previous successful build report to calculate the increase in mean value for each benchmark and set an indicator (i.e. 
+    // green or red for each benchmark) depending on threshold set in the configuration. If there is at least a red for 
+    // one benchmark, the build status will be unstable
+
+    AbstractBuild<?, ?> prevSuccessfulBuild = build.getPreviousSuccessfulBuild();
+
+    // if there is no previous successful build, there is no baseline build
+    if ( prevSuccessfulBuild != null )
     {
-      BenchmarkBuildAction previousBuildAction = previousBuild.getAction( BenchmarkBuildAction.class );
-      if ( previousBuildAction != null )
-      {
-        BenchmarkReport prevPerfReport = previousBuildAction.getBuildActionDisplay().getJmhPerfReport();
-        Map<String, BenchmarkResult> apiTestReport = parsedReport.getApiTestReport();
-        Map<String, BenchmarkResult> prevApiTestReport = prevPerfReport.getApiTestReport();
+      Map<String, BenchmarkResult> currentApiTestReport = parsedReport.getApiTestReport();
+      BenchmarkBuildAction prevBuildAction = prevSuccessfulBuild.getAction( BenchmarkBuildAction.class );
+      BenchmarkReport prevPerfReport = null;
+      Map<String, BenchmarkResult> prevApiTestReport = null;
 
-        for ( Map.Entry<String, BenchmarkResult> entry : apiTestReport.entrySet() )
+      if ( prevBuildAction != null )
+      {
+        prevPerfReport = prevBuildAction.getBuildActionDisplay().getJmhPerfReport();
+        prevApiTestReport = prevPerfReport.getApiTestReport();
+      }
+
+      AbstractBuild<?, ?> baselineBuild = getNthBuild( build );
+      Map<String, BenchmarkResult> baselineApiTestReport = null;
+      if ( baselineBuild != null )
+      {
+        BenchmarkBuildAction baselineBuildAction = baselineBuild.getAction( BenchmarkBuildAction.class );
+        BenchmarkReport baselinePerfReport = null;
+
+        if ( baselineBuildAction != null )
+        {
+          baselinePerfReport = baselineBuildAction.getBuildActionDisplay().getJmhPerfReport();
+          baselineApiTestReport = baselinePerfReport.getApiTestReport();
+        }
+      }
+
+      double decreaseInMeanFromPrev = 0;
+      double decreaseInMeanFromBaseline = 0;
+
+      if ( prevApiTestReport != null )
+      {
+        for ( Map.Entry<String, BenchmarkResult> entry : currentApiTestReport.entrySet() )
         {
           String key = entry.getKey();
           BenchmarkResult currVal = entry.getValue();
           BenchmarkResult prevVal = prevApiTestReport.get( key );
-          if(prevVal != null)
+
+          if ( prevVal != null )
           {
             // decrease in mean from previous is calculated as ((prev - curr)/prev) * 100%
-            double decreaseInMeanFromPrev = ( 1 - currVal.getMean() / prevVal.getMean() ) * 100.0;
-            // two decimal places
-            int multiplier = (int) Math.pow( 10, 2 );
-            decreaseInMeanFromPrev = (double) Math.round( decreaseInMeanFromPrev * multiplier ) / multiplier;
-            currVal.setMeanChangeFromPrev( decreaseInMeanFromPrev );
-            if ( decreaseInMeanFromPrev >= _performanceIncreaseThreshold )
+            decreaseInMeanFromPrev = ( 1 - currVal.getMean() / prevVal.getMean() ) * 100.0;
+            decreaseInMeanFromPrev = (double) Math.round( decreaseInMeanFromPrev * MULTIPLIER ) / MULTIPLIER;
+            if ( currVal.getMode().equalsIgnoreCase( BENCHMARK_MODE_THRPT ) )
             {
-              currVal.setChangeIndicator( "green" );
+              decreaseInMeanFromPrev = -1 * decreaseInMeanFromPrev;
             }
-            else if ( decreaseInMeanFromPrev <= _performanceDegradationThreshold )
+            currVal.setMeanChangeFromPrev( decreaseInMeanFromPrev );
+          }
+
+          if ( baselineApiTestReport != null )
+          {
+            BenchmarkResult baselineVal = baselineApiTestReport.get( key );
+
+            if ( baselineVal != null )
             {
-              currVal.setChangeIndicator( "red" );
-              buildStable = false;
-            }            
+              // decrease in mean from baseline is calculated as ((baseline - curr)/baseline) * 100%
+              decreaseInMeanFromBaseline = ( 1 - currVal.getMean() / baselineVal.getMean() ) * 100.0;
+              decreaseInMeanFromBaseline = (double) Math.round( decreaseInMeanFromBaseline * MULTIPLIER ) / MULTIPLIER;
+              if(currVal.getMode().equalsIgnoreCase( BENCHMARK_MODE_THRPT ))
+              {
+                decreaseInMeanFromBaseline = -1 * decreaseInMeanFromBaseline;
+              }
+              currVal.setMeanChangeFromBaseline( decreaseInMeanFromBaseline );              
+            }
+          }
+
+          if ( decreaseInMeanFromBaseline >= _performanceIncreaseThreshold
+               || decreaseInMeanFromPrev >= _performanceIncreaseThreshold )
+          {
+            currVal.setChangeIndicator( "green" );
+          }
+          else if ( decreaseInMeanFromBaseline <= _performanceDegradationThreshold
+                    || decreaseInMeanFromPrev <= _performanceDegradationThreshold )
+          {
+            currVal.setChangeIndicator( "red" );
+            buildStable = false;
           }
         }
       }
@@ -115,16 +195,35 @@ public class BenchmarkPublisher extends Recorder
     return true;
   }
 
-  private File copyBenchmarkOutputToMaster( AbstractBuild<?, ?> build, File output, String projectFolderName )
-    throws IOException, InterruptedException
+  private AbstractBuild getNthBuild( AbstractBuild build )
   {
-    File localReport = getPerformanceReport( build, projectFolderName, output.getName() );
+    if( _baselineBuildNumber == 0)
+      return null;
+    
+    AbstractBuild nthBuild = build;
 
-    FilePath src = new FilePath( output );
-    src.copyTo( new FilePath( localReport ) );
-    return localReport;
+    int nextBuildNumber = build.number - _baselineBuildNumber;
+
+    for ( int i = 1; i <= nextBuildNumber; i++ )
+    {
+      nthBuild = nthBuild.getPreviousBuild();
+      if ( nthBuild == null )
+        return null;
+      // this is required since old builds can be cleaned or the baseline builds are old builds that have been kept forever.
+      if(nthBuild.number == _baselineBuildNumber)
+        return nthBuild;
+    }
+    return nthBuild;
   }
-
+  
+  private File copyBenchmarkOutputToMaster( AbstractBuild<?, ?> build, FilePath output, String projectFolderName )
+      throws IOException, InterruptedException
+    {
+      File localReport = getPerformanceReport( build, projectFolderName, output.getName() );
+      output.copyTo( new FilePath( localReport ) );
+      return localReport;
+    }
+  
   public static File getPerformanceReport( AbstractBuild<?, ?> build, String projectFolderName,
                                            String benchmarkOutputFileName )
   {
@@ -133,7 +232,7 @@ public class BenchmarkPublisher extends Recorder
 
   private static String getRelativePath( String... suffixes )
   {
-    StringBuilder sb = new StringBuilder( 100 );
+    StringBuilder sb = new StringBuilder( 150 );
     sb.append( BENCHMARK_OUTPUT_FOLDER );
     for ( String suffix : suffixes )
     {
@@ -214,6 +313,19 @@ public class BenchmarkPublisher extends Recorder
         return FormValidation.error( "Not a valid number" );
       }
       return FormValidation.ok();
+    }
+    
+    public FormValidation doCheckBaselineBuildNumber(@QueryParameter String baselineBuildNumber)
+    {
+      try
+      {
+        Integer.parseInt( baselineBuildNumber );
+      }
+      catch ( NumberFormatException ex )
+      {
+        return FormValidation.error( "Not a valid number" );
+      }
+      return FormValidation.ok();      
     }
   }
 

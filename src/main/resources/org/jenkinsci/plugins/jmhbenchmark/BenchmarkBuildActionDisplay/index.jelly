@@ -6,7 +6,7 @@
       <j:set var="report" value="${it.getJmhPerfReport()}"/>
       <j:set var="benchmarkHeaderNoParams" value="${report.getHeaderWithoutParams()}"/>
       <j:set var="benchmarkHeaderParams" value="${report.getHeaderParamsSorted()}"/>
-      <j:set var="benchmarkResult" value="${report.getApiTestReport()}"/>        
+      <j:set var="benchmarkResult" value="${report.getApiTestReport()}"/>              
 	  <table class="sortable source">
 	    <tr>
 	      <th>No.</th>
@@ -29,13 +29,13 @@
           <td>${entry.value.unit}</td>
           <j:choose>
            <j:when test="${entry.value.changeIndicator == 'green'}">
-            <td><b><font color="green">${entry.value.meanChangeFromPrev} &#8593;</font></b></td>
+            <td><b><font color="green">( ${entry.value.meanChangeFromPrev} / ${entry.value.meanChangeFromBaseline} )</font></b></td>
            </j:when>
            <j:when test="${entry.value.changeIndicator == 'red'}">
-            <td><b><font color="red">${entry.value.meanChangeFromPrev} &#8595;</font></b></td>
+            <td><b><font color="red">( ${entry.value.meanChangeFromPrev} / ${entry.value.meanChangeFromBaseline} )</font></b></td>
            </j:when>
            <j:otherwise>
-            <td>${entry.value.meanChangeFromPrev}</td>
+            <td>( ${entry.value.meanChangeFromPrev} / ${entry.value.meanChangeFromBaseline} )</td>
            </j:otherwise>                     
           </j:choose>
 	      <j:forEach var="columnParams" items="${benchmarkHeaderParams}">

@@ -15,6 +15,7 @@ public class BenchmarkResult
   private String _unit;
   private Map<String, String> _params;
   private double _meanChangeFromPrev;
+  private double _meanChangeFromBaseline;
   private String _changeIndicator;
 
   public BenchmarkResult()
@@ -123,6 +124,16 @@ public class BenchmarkResult
     _meanChangeFromPrev = meanChangeFromPrev;
   }
 
+  public double getMeanChangeFromBaseline()
+  {
+    return _meanChangeFromBaseline;
+  }
+
+  public void setMeanChangeFromBaseline( double meanChangeFromBaseline )
+  {
+    _meanChangeFromBaseline = meanChangeFromBaseline;
+  }
+  
   public String getChangeIndicator()
   {
     return _changeIndicator;
