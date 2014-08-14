@@ -1,26 +1,16 @@
 package org.jenkinsci.plugins.jmhbenchmark;
 
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.Action;
-import hudson.model.BuildListener;
-import hudson.model.Result;
+import hudson.*;
+import hudson.model.*;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Publisher;
-import hudson.tasks.Recorder;
+import hudson.model.ParametersAction;
+import hudson.model.StringParameterValue;
+import hudson.tasks.*;
 import hudson.util.FormValidation;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -73,6 +63,7 @@ public class BenchmarkPublisher extends Recorder
   {
     BUILD_PROJECT_NAME = build.getProject().getName();
     boolean buildStable = true;
+    Set<String> failedBenchmarks = new HashSet<String>();
     
     PrintStream logger = listener.getLogger();
     if ( build.getResult().isWorseThan( Result.UNSTABLE ) )
@@ -178,20 +169,27 @@ public class BenchmarkPublisher extends Recorder
                     || decreaseInMeanFromPrev <= _performanceDegradationThreshold )
           {
             currVal.setChangeIndicator( "red" );
+            failedBenchmarks.add( currVal.getBenchmarkName() );
             buildStable = false;
           }
         }
       }
     }
-
+    
     BenchmarkBuildAction buildAction = new BenchmarkBuildAction( build, parsedReport, _decimalPlaces );
     build.addAction( buildAction );
-    
-    if(!buildStable)
+
+    if ( !buildStable )
     {
-      build.setResult( Result.UNSTABLE );
+      StringBuilder sb = new StringBuilder();
+      for ( String bm : failedBenchmarks )
+      {
+        sb.append( "|" ).append( bm );
+      }
+      build.addAction( new ParametersAction( new StringParameterValue( "JMH_FAILED_BENCHMARKS", sb.toString() ) ) );
+      build.setResult( Result.FAILURE );
     }
-    
+
     return true;
   }
 
