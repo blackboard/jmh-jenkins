@@ -187,7 +187,7 @@ public class BenchmarkPublisher extends Recorder
         sb.append( "|" ).append( bm );
       }
       build.addAction( new ParametersAction( new StringParameterValue( "JMH_FAILED_BENCHMARKS", sb.toString() ) ) );
-      build.setResult( Result.FAILURE );
+      build.setResult( Result.UNSTABLE );
     }
 
     return true;
