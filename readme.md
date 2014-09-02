@@ -7,16 +7,16 @@ JMH is a Java harness for building, running, and analyzing nano/micro/milli/macr
 ### Continuous Integration with the JMH Benchmark Jenkins Plugin ###
 
 1. As a build step, the JMH benchmark tests are run using a build automation tool such as Gradle. The test results are saved as a CSV format into a local file where the file location is specified relative to the `WORKSPACE` of the Jenkins project. 
-2. As a post-build action, the JMH Benchmark plugin will post the benchmark results to each build. Currently, the configuration accepts four input parameters:
-  * **Baseline Build Number** - the build number that will be used as a baseline. `0` is the default value if no baseline exists..
-  * **Performance Degradation Threshold (in %)** - this threshold applies between the current and previous successful build as well the current and baseline build if the latter is specified. The default threshold is -20%.
-  * **Performance Increase Threshold (in %)** - this threshold is an indicator for a performance improvement in the current build compared to the previous successful build and the baseline build if baseline is defined. The default threshold is +20%
-  * **Decimal Places in Benchmark Report** - the number of decimal places used in the benchmark report. 
+2. As a post-build action, the JMH Benchmark plugin will post the benchmark results to each build. Currently, the configuration accepts four input parameters: 
+   * *Baseline Build Number* - the build number that will be used as a baseline. `0` is the default value if no baseline exists..
+   * *Performance Degradation Threshold (in %)* - this threshold applies between the current and previous successful build as well the current and baseline build if the latter is specified. The default threshold is -20%.
+   * *Performance Increase Threshold (in %)* - this threshold is an indicator for a performance improvement in the current build compared to the previous successful build and the baseline build if baseline is defined. The default threshold is +20%
+   * *Decimal Places in Benchmark Report* - the number of decimal places used in the benchmark report. 
 
 The plugin provides the following two links to view the build and trend data:  
  
- * **JMH Benchmark Report** - this is accessed for each build and the benchmark output is available in a tabular form for a given build. In addition to the benchmark report, data on the the percentage gain/loss of each benchmark is given in comparison to the previous and baseline builds.
- * **JMH Report Trend** - this is accessed from the project page. This report trends data in a visual form for each benchmark over a specified number of past builds.
+ * *JMH Benchmark Report* - this is accessed for each build and the benchmark output is available in a tabular form for a given build. In addition to the benchmark report, data on the the percentage gain/loss of each benchmark is given in comparison to the previous and baseline builds.
+ * *JMH Report Trend* - this is accessed from the project page. This report trends data in a visual form for each benchmark over a specified number of past builds.
 
 *Note:* currently, the plugin can mark a build as unstable if at least one benchmark has a performance less than the degradation threshold. But, the plugin doesn't fail a build based on the benchmark test result.
 
@@ -25,15 +25,16 @@ The plugin provides the following two links to view the build and trend data:
 Gradle is the build automation tool used at Blackboard. We have created a JMH Gradle plugin to simplify running JMH Benchmark tests. For details of the JMH Gradle plugin, see https://stash.cloud.local/projects/PERF/repos/jmh-gradle-plugin/browse. Steps for configuring a Jenkins Job for a benchmark CI is as follows.
 
 1. As a build step, use the following values for the different parameters. Update the values based on your environment and the particular needs of the Jenkins project. Note that this configuration will run all the benchmarks created in the _apis/platform_ project.
-  * **Switches**: `--stacktrace --no-daemon -DjenkinsBuild -P-rf=csv -P-rff="${WORKSPACE}/learn-apis-platform_mainline-jmh-benchmark.csv" -P-jvmArgs="-Dbbservices_config=/usr/local/blackboard/config/service-config-unittest.properties"`
+   * *Switches*: `--stacktrace --no-daemon -DjenkinsBuild -P-rf=csv -P-rff="${WORKSPACE}/learn-apis-platform_mainline-jmh-benchmark.csv" -P-jvmArgs="-Dbbservices_config=/usr/local/blackboard/config/service-config-unittest.properties"`
 	 * if you need to exlude a benchmark from the CI, use the `e` option with a regex pattern to the benchmark. Example is: `-P-e=".*BenchmarkToExclude.*"` 
-  * **Tasks**: `benchmarkJmh`
-  * **Build File**: `mainline/projects/build.gradle`
+   * *Tasks*: `benchmarkJmh`
+   * *Build File*: `mainline/projects/build.gradle` 
+
 2. As a post-build action, the JMH Benchmark plugin will post the benchmark results to each build. Use the below values for the different parameters.
-  * **Baseline Build Number**: `0`
-  * **Performance Degradation Threshold (in %)**: `-20`
-  * **Performance Increase Threshold (in %)**: `20`
-  * **Decimal Places in Benchmark Report**: `4`
+   * *Baseline Build Number*: `0`
+   * *Performance Degradation Threshold (in %)*: `-20`
+   * *Performance Increase Threshold (in %)*: `20`
+   * *Decimal Places in Benchmark Report*: `4`
 
 ### Development ###
 
