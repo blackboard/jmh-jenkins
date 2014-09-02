@@ -9,22 +9,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * BenchmarkReport contains one or more {@link BenchmarkResult} objects for all the benchmarks
+ * run in the build.
+ *
+ */
 public class BenchmarkReport implements Serializable
 {
   private static final long serialVersionUID = 7490376469570293188L;
 
   private transient BenchmarkBuildAction _buildAction;
   private List<String> _header = new ArrayList<String>();
-  private final Map<String, BenchmarkResult> _apiTestReport = new TreeMap<String, BenchmarkResult>();
+  private final Map<String, BenchmarkResult> _report = new TreeMap<String, BenchmarkResult>();
 
-  public void addApiTestData( String apiName, BenchmarkResult data )
+  public void addBenchmarkResult( String benchmarkName, BenchmarkResult data )
   {
-    _apiTestReport.put( apiName, data );
+    _report.put( benchmarkName, data );
   }
 
-  public Map<String, BenchmarkResult> getApiTestReport()
+  public Map<String, BenchmarkResult> getReport()
   {
-    return _apiTestReport;
+    return _report;
   }
 
   public List<String> getHeader()
@@ -81,11 +86,5 @@ public class BenchmarkReport implements Serializable
   public void setBuildAction( BenchmarkBuildAction buildAction )
   {
     _buildAction = buildAction;
-  }
-
-  public String getDisplayName()
-  {
-    // TODO change the proper name
-    return "getDisplayName";
   }
 }
