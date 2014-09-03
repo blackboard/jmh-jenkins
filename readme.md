@@ -6,7 +6,7 @@ JMH is a Java harness for building, running, and analyzing nano/micro/milli/macr
 
 ### Continuous Integration with the JMH Benchmark Jenkins Plugin ###
 
-1. As a build step, the JMH benchmark tests are run using a build automation tool such as Gradle. The test results are saved as a CSV format into a local file where the file location is specified relative to the `WORKSPACE` of the Jenkins project. The raw benchmark result in the CSV format is also copied to the master. As an example, if you use the JMH Gradle plugin, available in https://stash.cloud.local/projects/PERF/repos/jmh-gradle-plugin/browse, here is how you may configure.the build step.
+1. As a build step, the JMH benchmark tests are run using a build automation tool such as Gradle. The test results are saved as a CSV format into a local file where the file location is specified relative to the `WORKSPACE` of the Jenkins project. The raw benchmark result in the CSV format is also copied to the master. As an example, if you use the JMH Gradle plugin, available in https://stash.cloud.local/projects/PERF/repos/jmh-gradle-plugin/browse, here is how you may configure the build step.
     * *Switches*: `-P-rf=csv -P-rff="${WORKSPACE}/learn-apis-platform_mainline-jmh-benchmark.csv"`
     * *Tasks*: `benchmarkJmh`
     * *Build File*: `mainline/projects/build.gradle`
@@ -24,16 +24,15 @@ The plugin provides the following two links to view the build and trend data:
 *Note:* currently, the plugin can mark a build as unstable if at least one benchmark has a performance less than the degradation threshold. But, the plugin doesn't fail a build based on the benchmark test result.
 
 
+### Testing the plugin in Jenkins ###
+
+* Download the source and build it: `$ mvn clean install`. *jmhbenchmark.hpi* is created under the target folder. 
+*  Install `jmhbenchmark.hpi` in Jenkins.
+
 ### Development ###
-
-To test the plugin in Jenkins:
-
-* download the source and build it: `$ mvn clean install`
-* `jmhbenchmark.hpi` is created under the target folder. 
-*  Install `jmhbenchmark.hpi` in Jenkins
 
 To import the project in Eclipse and develop:
 
 * Run `$ mvn -DdownloadSources=true -DdownloadJavadocs=true -DoutputDirectory=target/eclipse-classes eclipse:eclipse`
 * Use "Import..." (under the File menu in Eclipse) and select "General" > "Existing Projects into Workspace". 
-* Install Maven Integration for Eclipse plugin 
+* Install Maven Integration for Eclipse plugin. 
