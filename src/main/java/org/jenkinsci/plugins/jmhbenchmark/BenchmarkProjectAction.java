@@ -28,6 +28,11 @@ import hudson.util.ChartUtil.NumberOnlyBuildLabel;
 import hudson.util.DataSetBuilder;
 import hudson.util.ShiftedCategoryAxis;
 
+/**
+ * The {@link Action} that is executed at the project level. It constructs a benchmark trend ({@link BenchmarkTrend}) 
+ * on score and score error for each benchmark over the previous builds and creates a graph that shows this trend.
+ *
+ */
 public class BenchmarkProjectAction implements Action
 {
   private static final String PLUGIN_NAME = "jmhbenchmark";
@@ -35,7 +40,7 @@ public class BenchmarkProjectAction implements Action
 
   public final AbstractProject<?, ?> _project;
 
-  Map<String, BenchmarkTrend> _benchmarkTrend = new TreeMap<String, BenchmarkTrend>();
+  private Map<String, BenchmarkTrend> _benchmarkTrend = new TreeMap<String, BenchmarkTrend>();
 
   public BenchmarkProjectAction( @SuppressWarnings( "rawtypes" ) AbstractProject project )
   {
@@ -82,31 +87,33 @@ public class BenchmarkProjectAction implements Action
 
       BenchmarkReport perfReport = jmhBenchmarkBuildAction.getBuildActionDisplay().getJmhPerfReport();
 
-      buildBenchmarkData = perfReport.getApiTestReport();
+      buildBenchmarkData = perfReport.getReport();
 
-      for ( Map.Entry<String, BenchmarkResult> entry : buildBenchmarkData.entrySet() )
+      if(buildBenchmarkData != null)
       {
-        String key = entry.getKey();
-        BenchmarkResult val = entry.getValue();
-        if ( _benchmarkTrend.containsKey( key ) )
+        for ( Map.Entry<String, BenchmarkResult> entry : buildBenchmarkData.entrySet() )
         {
-          trendBenchmarkData = _benchmarkTrend.get( key );
-          if ( isBenchmarkConfigSame( val, trendBenchmarkData ) )
+          String key = entry.getKey();
+          BenchmarkResult val = entry.getValue();
+          if ( _benchmarkTrend.containsKey( key ) )
           {
+            trendBenchmarkData = _benchmarkTrend.get( key );
+            if ( isBenchmarkConfigSame( val, trendBenchmarkData ) )
+            {
+              trendBenchmarkData.addMeanTrend( buildNoLabel, val.getMean() );
+              trendBenchmarkData.addMeanErrorTrend( buildNoLabel, val.getMeanError() );
+            }
+          }
+          else
+          {
+            // create a benchmark trend if it hasn't yet been created
+            trendBenchmarkData = new BenchmarkTrend( val.getShortBenchmarkName(), val.getMode(), val.getThreads(),
+                                                     val.getSamples(), val.getUnit() );
             trendBenchmarkData.addMeanTrend( buildNoLabel, val.getMean() );
             trendBenchmarkData.addMeanErrorTrend( buildNoLabel, val.getMeanError() );
+            _benchmarkTrend.put( key, trendBenchmarkData );
           }
-        }
-        else
-        {
-          // this means the values taken for mode, threads, samples, unit are from the first occurrence in the report,
-          // that starts from the latest build down...
-          trendBenchmarkData = new BenchmarkTrend( val.getShortBenchmarkName(), val.getMode(), val.getThreads(),
-                                                   val.getSamples(), val.getUnit() );
-          trendBenchmarkData.addMeanTrend( buildNoLabel, val.getMean() );
-          trendBenchmarkData.addMeanErrorTrend( buildNoLabel, val.getMeanError() );
-          _benchmarkTrend.put( key, trendBenchmarkData );
-        }
+        }        
       }
     }
 
@@ -123,16 +130,12 @@ public class BenchmarkProjectAction implements Action
     return false;
   }
 
-  /**
-   * Graph of metric points over time.
-   */
   public void doSummarizerGraphForMetric( final StaplerRequest request, final StaplerResponse response )
     throws IOException
   {
 
     final String benchmarkKey = request.getParameter( "benchmarkKey" );
     final String benchmarkUnit = request.getParameter( "benchmarkUnit" );
-
     final String benchmarkThreads = request.getParameter( "benchmarkThreads" );
     final String benchmarkSamples = request.getParameter( "benchmarkSamples" );
     final String benchmarkMode = request.getParameter( "benchmarkMode" );
@@ -176,7 +179,7 @@ public class BenchmarkProjectAction implements Action
 
     protected GraphImpl( final String graphTitle, final String unit )
     {
-      super( -1, 300, 200 ); // cannot use timestamp, since ranges may change
+      super( -1, 300, 200 );
       _graphTitle = graphTitle;
       _unit = unit;
     }

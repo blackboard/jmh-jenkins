@@ -6,7 +6,7 @@
       <j:set var="report" value="${it.getJmhPerfReport()}"/>
       <j:set var="benchmarkHeaderNoParams" value="${report.getHeaderWithoutParams()}"/>
       <j:set var="benchmarkHeaderParams" value="${report.getHeaderParamsSorted()}"/>
-      <j:set var="benchmarkResult" value="${report.getApiTestReport()}"/>              
+      <j:set var="benchmarkResult" value="${report.getReport()}"/>              
 	  <table class="sortable source">
 	    <tr>
 	      <th>No.</th>

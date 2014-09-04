@@ -5,6 +5,10 @@ import hudson.util.ChartUtil.NumberOnlyBuildLabel;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ *  BenchmarkTrend contains the score and score error of a benchmark over a set of past builds.
+ *
+ */
 public class BenchmarkTrend
 {
   private String _benchmarkName;

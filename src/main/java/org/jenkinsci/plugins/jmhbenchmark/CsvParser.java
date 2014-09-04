@@ -13,7 +13,14 @@ import java.util.List;
 
 public class CsvParser extends ReportParser
 {
-  private static String IMPROVEMENT_IN_MEAN_HEADER_NAME = "Score Improvement % (previous/baseline)";
+  private static final String IMPROVEMENT_IN_MEAN_HEADER_NAME = "Score Improvement % (previous/baseline)";
+  private static final int BENCHMARK_NAME = 0;  
+  private static final int BENCHMARK_MODE = 1;
+  private static final int THREADS = 2;
+  private static final int SAMPLES = 3;
+  private static final int MEAN = 4;
+  private static final int MEAN_ERROR_99_9 = 5;
+  private static final int UNIT = 6;
 
   public CsvParser()
   {
@@ -33,6 +40,7 @@ public class CsvParser extends ReportParser
     try
     {
       List<String> headerColumns = null;
+      logger.println("Parsing the file : " + reportFile.getName());
       reader = new BufferedReader( new FileReader( reportFile ) );
       String line = reader.readLine();
       if ( line != null )
@@ -46,7 +54,7 @@ public class CsvParser extends ReportParser
       while ( line != null )
       {
         BenchmarkResult sample = getIndividualBenchmark( line, headerColumns );
-        report.addApiTestData( sample.getKey(), sample );
+        report.addBenchmarkResult( sample.getKey(), sample );
         line = reader.readLine();
       }
     }
@@ -62,12 +70,12 @@ public class CsvParser extends ReportParser
   }
                      
   /**
-   * If the benchmark has no parameters, the output is in the order: 
+   * If a benchmark hasn't used parameters, the output is in the order: 
    *    "Benchmark","Mode","Threads","Samples","Score","Score Error (99.9%)","Unit"
-   * If the benchmark has parameters, the output is in the following form:
-   *    "Benchmark","Mode","Threads","Samples","Score","Score Error (99.9%)","Unit", "Param: paramName1","Param: paramName2"
-   * @param line
-   * @param header
+   * If a benchmark used parameters, the output is in the order:
+   *    "Benchmark","Mode","Threads","Samples","Score","Score Error (99.9%)","Unit", "Param: paramName1","Param: paramName2" 
+   * @param line - a line of data from the csv file to which the benchmark result is written
+   * @param header - the header of the csv file
    * @return
    */
   private BenchmarkResult getIndividualBenchmark( String line, List<String> header )
@@ -75,18 +83,18 @@ public class CsvParser extends ReportParser
     BenchmarkResult sample = new BenchmarkResult();
 
     String[] values = line.split( "," );
-    String benchmarkName = stripQuotes( values[ 0 ] );
+    String benchmarkName = stripQuotes( values[ BENCHMARK_NAME ] );
     sample.setBenchmarkName( benchmarkName );
     sample.setShortBenchmarkName( getShortName(benchmarkName) );
-    sample.setMode( stripQuotes( values[ 1 ] ) );
-    sample.setThreads( Integer.valueOf( values[ 2 ] ) );
-    sample.setSamples( Integer.valueOf( values[ 3 ] ) );
-    sample.setMean( Double.valueOf( values[ 4 ] ) );
-    if ( !values[ 5 ].equals( "NaN" ) )
+    sample.setMode( stripQuotes( values[ BENCHMARK_MODE ] ) );
+    sample.setThreads( Integer.valueOf( values[ THREADS ] ) );
+    sample.setSamples( Integer.valueOf( values[ SAMPLES ] ) );
+    sample.setMean( Double.valueOf( values[ MEAN ] ) );
+    if ( !values[ MEAN_ERROR_99_9 ].equals( "NaN" ) )
     {
-      sample.setMeanError( Double.valueOf( values[ 5 ] ) );
+      sample.setMeanError( Double.valueOf( values[ MEAN_ERROR_99_9 ] ) );
     }
-    sample.setUnit( stripQuotes( values[ 6 ] ) );
+    sample.setUnit( stripQuotes( values[ UNIT ] ) );
 
     for ( int i = 7; i < values.length; i++ )
     {
@@ -127,5 +135,4 @@ public class CsvParser extends ReportParser
     }
     return headers;
   }
-
 }

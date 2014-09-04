@@ -3,6 +3,13 @@ package org.jenkinsci.plugins.jmhbenchmark;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * BenchmarkResult contains properties associated with a JMH benchmark such as name of the benchmark, mode the benchmark is run, 
+ * number of threads, samples, mean, mean error, unit, list of parameters if any. Since the benchmark is also expected to run in 
+ * a Continuous Integration, BenchmarkResult also contains data on the percentage change of the benchmark score from previous 
+ * builds and from a baseline build.
+ *
+ */
 public class BenchmarkResult
 {
   private String _benchmarkName;

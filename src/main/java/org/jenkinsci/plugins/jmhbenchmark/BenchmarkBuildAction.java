@@ -8,11 +8,17 @@ import java.lang.ref.WeakReference;
 
 import org.kohsuke.stapler.StaplerProxy;
 
+/**
+ * The {@link Action} that is executed at the build level. It creates a link (i.e. JMH Benchmark Report) at the 
+ * left menu of the build page. When this link is clicked, the benchmark report ({@link BenchmarkReport}) for 
+ * the selected build is displayed.
+ *
+ */
 public class BenchmarkBuildAction implements Action, StaplerProxy
 {
   private final AbstractBuild<?, ?> _build;
   private final BenchmarkReport _performanceReport;
-  private int _decimalPlaces;
+  private final int _decimalPlaces;
   private transient WeakReference<BenchmarkBuildActionDisplay> _buildActionDisplay;
 
   public BenchmarkBuildAction( AbstractBuild<?, ?> pBuild, BenchmarkReport performanceReport, int decimalPlaces )
@@ -32,8 +38,6 @@ public class BenchmarkBuildAction implements Action, StaplerProxy
     return "JMH Benchmark Report";
   }
 
-  // this must be the name of the plugin (what's also the artifactId in the pom file).
-  // how do we have different jelly files and how can we address each of them? I.e. what's the link?
   public String getUrlName()
   {
     return "jmhbenchmark";

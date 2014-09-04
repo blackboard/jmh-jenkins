@@ -4,11 +4,16 @@ import hudson.model.AbstractBuild;
 import hudson.model.ModelObject;
 import hudson.model.TaskListener;
 
+/**
+ * BenchmarkBuildActionDisplay is a {@link ModelOject} that contains the benchmark report ({@link BenchmarkReport}). This object is 
+ * created when the JMH Benchmark Report link is clicked from the build page.  
+ *
+ */
 public class BenchmarkBuildActionDisplay implements ModelObject
 {
   private transient BenchmarkBuildAction _buildAction; 
-  private transient int _decimalPlaces;
-  private BenchmarkReport _currentReport;
+  private final int _decimalPlaces;
+  private final BenchmarkReport _currentReport;
   
   public BenchmarkBuildActionDisplay( final BenchmarkBuildAction buildAction, TaskListener listener, int decimalPlaces )
   {
@@ -20,7 +25,7 @@ public class BenchmarkBuildActionDisplay implements ModelObject
   
   public String getDisplayName()
   {
-    return "JMH Performance Report Display";
+    return "Benchmark Report";
   }
 
   public AbstractBuild<?, ?> getBuild()

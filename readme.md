@@ -6,45 +6,33 @@ JMH is a Java harness for building, running, and analyzing nano/micro/milli/macr
 
 ### Continuous Integration with the JMH Benchmark Jenkins Plugin ###
 
-1. As a build step, the JMH benchmark tests are run using a build automation tool such as Ant or Gradle. The test results are saved as a CSV format into a local file where the file location is specified relative to the `WORKSPACE` of the Jenkins project. 
-2. As a post-build action, the JMH Benchmark plugin will post the benchmark results to each build. Currently, the configuration accepts four input parameters:
- * `Baseline Build Number` - the build number that will be used as a baseline. `0` is the default value if no baseline exists..
- * `Performance Degradation Threshold (in %)` - this threshold applies between the current and previous successful build as well the current and baseline build if the latter is specified. The default threshold is -20%.
- * `Performance Increase Threshold (in %)` - this threshold is an indicator for a performance improvement in the current build compared to the previous successful build and the baseline build if baseline is defined. The default threshold is +20%
- * `Decimal Places in Benchmark Report` - the number of decimal places used in the benchmark report. 
+1. As a build step, the JMH benchmark tests are run using a build automation tool such as Gradle. The test results are saved as a CSV format into a local file where the file location is specified relative to the `WORKSPACE` of the Jenkins project. The raw benchmark result in the CSV format is also copied to the master. As an example, if you use the JMH Gradle plugin, available in https://stash.cloud.local/projects/PERF/repos/jmh-gradle-plugin/browse, here is how you may configure the build step.
+    * *Switches*: `-P-rf=csv -P-rff="${WORKSPACE}/learn-apis-platform_mainline-jmh-benchmark.csv"`
+    * *Tasks*: `benchmarkJmh`
+    * *Build File*: `mainline/projects/build.gradle`
+2. As a post-build action, the JMH Benchmark plugin will post the benchmark results to each build. Currently, the configuration accepts four input parameters: 
+    * *Baseline Build Number* - the build number that will be used as a baseline. `0` is the default value if no baseline exists..
+    * *Performance Degradation Threshold (in %)* - this threshold applies between the current and previous successful build as well the current and baseline build if the latter is specified. The default threshold is -20%.
+    * *Performance Increase Threshold (in %)* - this threshold is an indicator for a performance improvement in the current build compared to the previous successful build and the baseline build if baseline is defined. The default threshold is +20%
+    * *Decimal Places in Benchmark Report* - the number of decimal places used in the benchmark report. 
 
 The plugin provides the following two links to view the build and trend data:  
  
- * `JMH Benchmark Report` - this is accessed for each build and the benchmark output is available in a tabular form for a given build. In addition to the benchmark report, data on the the percentage gain/loss of each benchmark is given in comparison to the previous and baseline builds.
- * `JMH Report Trend` - this is accessed from the project page. This report trends data in a visual form for each benchmark over a specified number of past builds.
+ * *JMH Benchmark Report* - this is accessed for each build and the benchmark output is available in a tabular form for a given build. In addition to the benchmark report, data on the the percentage gain/loss of each benchmark is given in comparison to the previous and baseline builds.
+ * *JMH Report Trend* - this is accessed from the project page. This report trends data in a visual form for each benchmark over a specified number of past builds.
 
 *Note:* currently, the plugin can mark a build as unstable if at least one benchmark has a performance less than the degradation threshold. But, the plugin doesn't fail a build based on the benchmark test result.
 
-### Continuous Integration for Blackboard JMH Benchmark ###
 
-Gradle is the build automation tool used at Blackboard. We have created a JMH Gradle plugin to simplify running JMH Benchmark tests. For details of the JMH Gradle plugin, see https://stash.cloud.local/projects/PERF/repos/jmh-gradle-plugin/browse. Steps for configuring a Jenkins Job for a benchmark CI is as follows.
+### Testing the plugin in Jenkins ###
 
-1. As a build step, use the following values for the different parameters. Update the values based on your environment and the particular needs of the Jenkins project. Note that this configuration will run all the benchmarks created in the _apis/platform_ project.
- * Switches: `--stacktrace --no-daemon -DjenkinsBuild -P-f=1 -P-rf=csv -P-rff="${WORKSPACE}/learn-apis-platform_mainline-jmh-benchmark.csv" -P-jvmArgs="-Dbbservices_config=/usr/local/blackboard/config/service-config-unittest.properties"`
-	 * if you need to exlude a benchmark from the CI, use the `e` option with a regex pattern to the benchmark. Example is: `-P-e=".*BenchmarkToExclude.*"` 
- * Tasks: `benchmarkJmh`
- * Build File: `mainline/projects/build.gradle`
-2. As a post-build action, the JMH Benchmark plugin will post the benchmark results to each build. Use the below values for the different parameters.
- * Baseline Build Number: `0`
- * Performance Degradation Threshold (in %): `-20`
- * Performance Increase Threshold (in %): `20`
- * Decimal Places in Benchmark Report: `4`
+* Download the source and build it: `$ mvn clean install`. *jmhbenchmark.hpi* is created under the target folder. 
+*  Install `jmhbenchmark.hpi` in Jenkins.
 
 ### Development ###
-
-To test the plugin in Jenkins:
-
-* download the source and build it: `$ mvn clean install`
-* `jmhbenchmark.hpi` is created under the target folder. 
-*  Install `jmhbenchmark.hpi` in Jenkins
 
 To import the project in Eclipse and develop:
 
 * Run `$ mvn -DdownloadSources=true -DdownloadJavadocs=true -DoutputDirectory=target/eclipse-classes eclipse:eclipse`
 * Use "Import..." (under the File menu in Eclipse) and select "General" > "Existing Projects into Workspace". 
-* Install Maven Integration for Eclipse plugin 
+* Install Maven Integration for Eclipse plugin. 
