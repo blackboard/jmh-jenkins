@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.jmhbenchmark;
+package blackboard.test.jenkins.jmhbenchmark;
 
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;

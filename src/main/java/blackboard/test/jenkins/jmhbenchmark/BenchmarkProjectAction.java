@@ -1,4 +1,4 @@
-package org.jenkinsci.plugins.jmhbenchmark;
+package blackboard.test.jenkins.jmhbenchmark;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
