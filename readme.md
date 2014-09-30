@@ -6,7 +6,7 @@ JMH is a Java harness for building, running, and analyzing nano/micro/milli/macr
 
 ### Continuous Integration with the JMH Benchmark Jenkins Plugin ###
 
-1. As a build step, the JMH benchmark tests are run using a build automation tool such as Gradle. The test results are saved as a CSV format into a local file where the file location is specified relative to the `WORKSPACE` of the Jenkins project. The raw benchmark result in the CSV format is also copied to the master. As an example, if you use the JMH Gradle plugin, available in https://stash.cloud.local/projects/PERF/repos/jmh-gradle-plugin/browse, here is how you may configure the build step.
+1. As a build step, the JMH benchmark tests are run using a build automation tool such as Gradle. The test results are saved as a CSV format into a local file where the file location is specified relative to the `WORKSPACE` of the Jenkins project. The raw benchmark result in the CSV format is also copied to the master. As an example, if you use the JMH Gradle plugin, available in https://github.com/blackboard/jmh-gradle-plugin, here is how you may configure the build step.
     * *Switches*: `-P-rf=csv -P-rff="${WORKSPACE}/learn-apis-platform_mainline-jmh-benchmark.csv"`
     * *Tasks*: `benchmarkJmh`
     * *Build File*: `mainline/projects/build.gradle`
