@@ -34,21 +34,26 @@ public class BenchmarkPublisher extends Recorder
   private final int _performanceDegradationThreshold;
   private final int _decimalPlaces;
   private final int _baselineBuildNumber;
+  private final String _resultFiles;
+
   private ReportParser _parser;
   private static final String BENCHMARK_OUTPUT_FOLDER = "jmh_benchmark_result";
   private static final String BENCHMARK_MODE_THRPT = "thrpt";
+
   private static String BUILD_PROJECT_NAME;
   // two decimal places are used to set changes from previous or baseline build
   private static final int MULTIPLIER = 100;
 
   @DataBoundConstructor
-  public BenchmarkPublisher( int performanceIncreaseThreshold, int performanceDegradationThreshold, int decimalPlaces,
-                             int baselineBuildNumber )
+  public BenchmarkPublisher(String resultFiles,
+                            int performanceIncreaseThreshold, int performanceDegradationThreshold, int decimalPlaces,
+                            int baselineBuildNumber)
   {
     _performanceIncreaseThreshold = performanceIncreaseThreshold;
     _performanceDegradationThreshold = performanceDegradationThreshold;
     _decimalPlaces = decimalPlaces;
     _baselineBuildNumber = baselineBuildNumber;
+    _resultFiles = resultFiles;
   }
 
   public int getDecimalPlaces()
@@ -86,7 +91,8 @@ public class BenchmarkPublisher extends Recorder
       return true;
     }
 
-    FilePath[] files = build.getWorkspace().list( "*.csv" );
+    FilePath[] files = build.getWorkspace().list(_resultFiles);
+
     if ( files.length <= 0 )
     {
       build.setResult( Result.FAILURE );
