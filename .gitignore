@@ -3,4 +3,6 @@
 /work
 /.classpath
 /.project
+/.idea
 /bin
+/*.iml

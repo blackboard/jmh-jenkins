@@ -8,6 +8,10 @@
     When submitted, it will be passed to the corresponding constructor parameter.
   -->
 
+  <f:entry title="JMH Result Files" description="An Ant-style file pattern for JMH results in CSV format">
+    <f:textbox field="resultFiles" default="**/jmh/*.csv" />
+  </f:entry>
+
   <f:entry title="Baseline Build Number">
     <f:textbox field="baselineBuildNumber" default="0" />
   </f:entry>
