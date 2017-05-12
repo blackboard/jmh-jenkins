@@ -86,7 +86,7 @@ public class BenchmarkPublisher extends Recorder
       return true;
     }
 
-    FilePath[] files = build.getWorkspace().list( "*.csv" );
+    FilePath[] files = searchCsv(build, "*.csv", logger);
     if ( files.length <= 0 )
     {
       build.setResult( Result.FAILURE );
@@ -207,7 +207,23 @@ public class BenchmarkPublisher extends Recorder
     return true;
   }
 
-  private AbstractBuild<?, ?> getBaselineBuild( AbstractBuild<?, ?> build )
+  private FilePath[] searchCsv(AbstractBuild<?, ?> build, String pattern, PrintStream logger) throws IOException, InterruptedException {
+	FilePath[] files = build.getWorkspace().list(pattern);
+    if (files.length <= 0) {
+      logger.println("JMH Benchmark: failed to find results on root directory. Will look into subdirectories.");
+      // Look inside subdirectories
+	  List<FilePath> dirs = build.getWorkspace().listDirectories();
+	  for (FilePath dir : dirs) {
+	    logger.println("JMH Benchmark: Searching [" + dir.getBaseName() + "]");
+		files = dir.list("*.csv");
+		if (files.length > 0)
+		  return files;
+		}
+    }
+    return files;
+  }
+
+private AbstractBuild<?, ?> getBaselineBuild( AbstractBuild<?, ?> build )
   {
     if ( _baselineBuildNumber == 0 )
       return null;
