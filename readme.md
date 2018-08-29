@@ -18,7 +18,7 @@ JMH is a Java harness for building, running, and analyzing nano/micro/milli/macr
 
 The plugin provides the following two links to view the build and trend data:  
  
- * *JMH Benchmark Report* - this is accessed for each build and the benchmark output is available in a tabular form for a given build. In addition to the benchmark report, data on the the percentage gain/loss of each benchmark is given in comparison to the previous and baseline builds.
+ * *JMH Benchmark Report* - this is accessed for each build and the benchmark output is available in a tabular form for a given build. In addition to the benchmark report, data on the percentage gain/loss of each benchmark is given in comparison to the previous and baseline builds.
  * *JMH Report Trend* - this is accessed from the project page. This report trends data in a visual form for each benchmark over a specified number of past builds.
 
 *Note:* currently, the plugin can mark a build as unstable if at least one benchmark has a performance less than the degradation threshold. But, the plugin doesn't fail a build based on the benchmark test result.
